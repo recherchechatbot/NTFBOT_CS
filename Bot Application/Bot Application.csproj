@@ -106,7 +106,6 @@
   <ItemGroup>
     <Content Include="default.htm" />
     <Content Include="Global.asax" />
-    <Content Include="NTFBOT_CS.csproj" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -124,6 +123,7 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="project.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
