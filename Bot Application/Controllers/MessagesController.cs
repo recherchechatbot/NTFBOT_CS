@@ -10,7 +10,15 @@ using System.Web.Http.Description;
 using System.Net.Http;
 using System.Diagnostics;
 using Microsoft.Bot.Builder.Luis.Models;
-
+using System.Net;
+using RestSharp;
+using RestSharp.Deserializers;
+using ServiceStack.Text;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.IO;
+using System.Text;
+using System.Runtime.Serialization.Json;
 
 
 namespace Bot_Application
@@ -35,87 +43,101 @@ namespace Bot_Application
     //    }
     //}
 
-
-    //[Serializable]
-    //public class EchoDialog : IDialog<object>
-    //{
-    //    protected int count = 1;
-    //    public async Task StartAsync(IDialogContext context)
-    //    {
-    //        context.Wait(MessageReceivedAsync);
-    //    }
-
-    //    public async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
-    //    {
-    //        var message = await argument;
-    //        if (message.Text == "reset")
-    //        {
-    //            PromptDialog.Confirm(
-    //                context,
-    //                AfterResetAsync,
-    //                "Ês-tu sûr de vouloir remettre le compteur à 0?",
-    //                "Pas compris",
-    //                promptStyle: PromptStyle.None);
-    //        }
-    //        else
-    //        {
-    //            await context.PostAsync($"{this.count++}: Tu as dit: " + message.Text);
-    //            context.Wait(MessageReceivedAsync);
-    //        }
-
-    //    }
-    //    public async Task AfterResetAsync(IDialogContext context, IAwaitable<bool> argument)
-    //    {
-    //        var confirm = await argument;
-    //        if (confirm)
-    //        {
-    //            this.count = 1;
-    //            await context.PostAsync("Compteur à 0");
-    //        }
-    //        else
-    //        {
-    //            await context.PostAsync("Compteur intact");
-    //        }
-    //        context.Wait(MessageReceivedAsync);
-    //    }
-    //}
-
     [Serializable]
     public class MyBot : IDialog<object>
     {
-        protected int count = 1;
+        
         public async Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
         }
 
-        public async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
+        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
         {
             var message = await argument;
-            if (message.Text == "recette poulet")
+            //var myToken = "32e88d45-0f1a-4d39-b35b-a8469da5ad10";
+            if (message.Text == "recettes")
             {
-                await context.PostAsync("Ici on mettra les resultats de la recherche de recettes");
-                context.Wait(MessageReceivedAsync);
-            }
-            else if (message.Text=="courses poulet")
-            {
-                await context.PostAsync("Ici on mettra les resultats de la recherche de produits");
-                context.Wait(MessageReceivedAsync);
+                PromptDialog.Text(
+                    context,
+                    ResumeAfterProductDefined,
+                    "Qu'est-ce qui te fait envie?",
+                    null,
+                    0
+                    );
             }
             else
             {
                 await context.PostAsync("Je n'ai pas compris désolé.");
                 context.Wait(MessageReceivedAsync);
             }
-           
-
         }
-       
 
-        //public Task StartAsync(IDialogContext context)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task ResumeAfterProductDefined(IDialogContext context, IAwaitable<string> argument)
+        {
+            var product = await argument;
+            //var url = $"https://wsmcommerce.intermarche.com/api/v1/recherche/recette?mot=%22{product}%22";
+            //var client = new RestClient(url);
+            //await context.PostAsync($"{product} 1");
+            //var request = new RestRequest(Method.GET);
+            //await context.PostAsync($"{product} 2");
+            //request.AddHeader("postman-token", "0c334483-3d42-d004-c141-bd5942b728cf");
+            //await context.PostAsync($"{product} 3");
+            //request.AddHeader("cache-control", "no-cache");
+            //await context.PostAsync($"{product} 4");
+            //request.AddHeader("TokenAuthentification", "32e88d45-0f1a-4d39-b35b-a8469da5ad10");
+            //await context.PostAsync($"{product} 5");
+            //IRestResponse response = client.Execute(request);
+
+            //Debug.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + response.Content);
+            //await context.PostAsync($"{product} 6");
+            ////JObject jsonResponse = JsonConvert.DeserializeObject(responseContent);
+            ////var messageList = JsonConvert.DeserializeObject<List<Message>>(jsonResponse["messages"].ToString()‌​);
+            //await context.PostAsync("Je n'ai pas compris désolé.");
+            ////await context.PostAsync(responseContent);
+            //await context.PostAsync($"{product}");
+
+
+
+            //string url = $"https://wsmcommerce.intermarche.com/api/v1/recherche/recette?mot=%22{product}%22";
+
+            //HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            //httpWebRequest.Method = WebRequestMethods.Http.Get;
+            //httpWebRequest.Headers["tokenauthentification"] = "32e88d45-0f1a-4d39-b35b-a8469da5ad10";
+            //httpWebRequest.Accept = "text/json";
+            //httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            //HttpWebResponse response = (HttpWebResponse)httpWebRequest.GetResponse();            
+            //var myJSON = JsonConvert.SerializeObject(response);
+            //await context.PostAsync(myJSON);
+            string url = "https://wsmcommerce.intermarche.com/";
+
+            try
+            {
+                using (var Client = new HttpClient())
+                {
+                    Client.BaseAddress = new Uri(url);
+                    Client.DefaultRequestHeaders.Accept.Clear();
+                    //Client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                    Client.DefaultRequestHeaders.Add("TokenAuthentification", "32e88d45-0f1a-4d39-b35b-a8469da5ad10");
+                    HttpResponseMessage response = await Client.GetAsync($"api/v1/recherche/recette?mot=\"{product}\"");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var JSON = await response.Content.ReadAsStringAsync();
+                        await context.PostAsync(JSON);
+                    }
+                    else
+                    {
+                        await context.PostAsync("C'est raté");
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                await context.PostAsync("Exception");
+            }
+            context.Wait(MessageReceivedAsync);
+        }
     }
 
     [BotAuthentication]
