@@ -23,6 +23,7 @@ using System.Runtime.Serialization.Json;
 
 namespace Bot_Application
 {
+    
     //[LuisModel("7bdd8be2-33f1-4be7-9bb8-54e0fe8d15e4", "97b706dcc753412cadc7bb66d615ce1a", domain: "westeurope.api.cognitive.microsoft.com")]
     //[Serializable]
     //public class MyLuisDialog : LuisDialog<object>
